@@ -8,6 +8,6 @@ public class JavaVM {
     public void DestroyJavaVM()
     {
         JNIInvokeInterface jii = (JNIInvokeInterface) functions.readObject();
-        jii.DestroyJavaVM
+        jii.DestroyJavaVM.invoke(jii, null);
     }
 }

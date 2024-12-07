@@ -8,8 +8,11 @@ public class NativePointer {
     }
 
     public NativePointer(Object obj) {
-        
+        genNativePtrFromObj(obj);
     }
+
+    @NativeImplementation("__instance->address = (int64_t) obj;")
+    private native void genNativePtrFromObj(Object obj);
 
     protected void throwNotImplemented() {
         throw new UnsupportedOperationException("This method is not implemented by currently running Java Virtual Machine");
@@ -37,62 +40,51 @@ public class NativePointer {
         return "0x" + Long.toHexString(address);
     }
 
+    @ForceArgumentPointer(arg = 1, dimensions = 1)
+    @NativeImplementationInternal(id = "ru.axenda.NativePointer.InvokeImpl")
+    public native void invoke(Object retval, Object[] args);
+
     // Memory Reading
-    public short readU8() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(uint8_t*) __instance->address;")
+    public native short readU8();
 
-    public byte readS8() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(int8_t*) __instance->address;")
+    public native byte readS8();
 
-    public int readU16() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(uint16_t*) __instance->address;")
+    public native int readU16();
 
-    public short readS16() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(int16_t*) __instance->address;")
+    public native short readS16();
 
-    public long readU32() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return (int64_t) (*(uint32_t*) __instance->address);")
+    public native long readU32();
 
-    public int readS32() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(int32_t*) __instance->address;")
+    public native int readS32();
 
-    public long readU64() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(uint64_t*) __instance->address;")
+    public native long readU64();
 
-    public long readS64() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(int64_t*) __instance->address;")
+    public native long readS64();
 
-    public float readFloat() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(float*) __instance->address;")
+    public native float readFloat();
 
-    public double readDouble() {
-        throwNotImplemented();
-        return 0;
-    }
+    @NativeImplementation("return *(double*) __instance->address;")
+    public native double readDouble();
 
-    public NativePointer readPointer() {
-        throwNotImplemented();
-        return null;
-    }
+    @NativeImplementation("""
+        int64_t ptr = (int64_t) (*(void **) __instance->address);
+        NativePointer *nptr = (NativePointer *) JRuntime_AllocObject(sizeof(NativePointer));
+        nptr->address = ptr;
 
+        return nptr;
+    """)
+    public native NativePointer readPointer();
+
+    // Use JRuntime_NewString function
     public String readCString() {
         throwNotImplemented();
         return null;
@@ -108,11 +100,14 @@ public class NativePointer {
         return null;
     }
 
+    // Use JRuntime_NewByteArray(ptr, len), which returns byte[]
     public byte[] readByteArray(int length) {
         throwNotImplemented();
         return null;
     }
 
+    @ForceReturnType(val = "void *")
+    @NativeImplementation("return *(void **) __instance->address;")
     public Object readObject() {
         throwNotImplemented();
         return null;
